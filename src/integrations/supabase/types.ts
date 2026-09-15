@@ -14,7 +14,139 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      deadlines: {
+        Row: {
+          created_at: string
+          deadline_date: string
+          google_event_id: string | null
+          id: string
+          item_id: string | null
+          recommended_action: string | null
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deadline_date: string
+          google_event_id?: string | null
+          id?: string
+          item_id?: string | null
+          recommended_action?: string | null
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deadline_date?: string
+          google_event_id?: string | null
+          id?: string
+          item_id?: string | null
+          recommended_action?: string | null
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deadlines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string
+          extracted_data: Json
+          file_path: string | null
+          id: string
+          item_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_data?: Json
+          file_path?: string | null
+          id?: string
+          item_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extracted_data?: Json
+          file_path?: string | null
+          id?: string
+          item_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          brand: string | null
+          category: string
+          created_at: string
+          id: string
+          purchase_date: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          purchase_date?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          purchase_date?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          preferences: Json
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          preferences?: Json
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          preferences?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
