@@ -69,8 +69,14 @@ export function AddItemSheet({
 
   async function save() {
     if (!draft) return;
-    if (!draft.title.trim()) return toast.error("Give the item a name");
-    if (!draft.expiryDate) return toast.error("Pick a deadline date");
+    if (!draft.title.trim()) {
+      toast.error("Give the item a name");
+      return;
+    }
+    if (!draft.expiryDate) {
+      toast.error("Pick a deadline date");
+      return;
+    }
     setSaving(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
