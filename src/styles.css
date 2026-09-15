@@ -132,13 +132,71 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+/* CivicDesk — always-dark "liquid glass" theme */
+:root {
+  --radius: 1rem;
+  --background: oklch(0.145 0.02 265);
+  --foreground: oklch(0.99 0 0);
+  --card: oklch(0.21 0.02 265);
+  --card-foreground: oklch(0.99 0 0);
+  --popover: oklch(0.19 0.02 265);
+  --popover-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.62 0.19 258);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.28 0.03 265);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.28 0.03 265);
+  --muted-foreground: oklch(0.72 0.02 265);
+  --accent: oklch(0.6 0.2 300);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.63 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(1 0 0 / 15%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.62 0.19 258);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
   }
 
+  html,
   body {
-    background-color: var(--color-background);
+    min-height: 100dvh;
+    background-color: oklch(0.145 0.02 265);
     color: var(--color-foreground);
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@utility glass {
+  backdrop-filter: blur(24px);
+  background-color: rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.15);
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.6);
+}
+
+@utility glass-strong {
+  backdrop-filter: blur(32px);
+  background-color: rgb(0 0 0 / 0.45);
+  border: 1px solid rgb(255 255 255 / 0.15);
+  box-shadow: 0 12px 36px -12px rgb(0 0 0 / 0.8);
+}
+
+@utility safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+@utility safe-top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+}
+
+@utility press {
+  transition:
+    transform 120ms ease,
+    background-color 160ms ease;
+  &:active {
+    transform: scale(0.96);
   }
 }
