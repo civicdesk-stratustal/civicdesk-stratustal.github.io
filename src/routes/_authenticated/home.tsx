@@ -64,7 +64,10 @@ function HomePage() {
       return;
     }
     const { error } = await supabase.from("deadlines").update({ status: "completed" }).eq("id", d.id);
-    if (error) return toast.error("Could not update this one");
+    if (error) {
+      toast.error("Could not update this one");
+      return;
+    }
     toast.success("Marked complete");
     qc.invalidateQueries({ queryKey: ["deadlines"] });
   }

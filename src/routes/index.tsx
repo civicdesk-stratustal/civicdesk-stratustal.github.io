@@ -46,8 +46,14 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.includes("@")) return toast.error("Enter a valid email address");
-    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    if (!email.includes("@")) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     setLoading(true);
     try {
       if (tab === "signup") {
