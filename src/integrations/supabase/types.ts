@@ -100,6 +100,7 @@ export type Database = {
           created_at: string
           id: string
           purchase_date: string | null
+          summary: string | null
           title: string
           user_id: string
         }
@@ -109,6 +110,7 @@ export type Database = {
           created_at?: string
           id?: string
           purchase_date?: string | null
+          summary?: string | null
           title: string
           user_id: string
         }
@@ -118,6 +120,7 @@ export type Database = {
           created_at?: string
           id?: string
           purchase_date?: string | null
+          summary?: string | null
           title?: string
           user_id?: string
         }
