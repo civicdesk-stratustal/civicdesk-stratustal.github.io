@@ -1,13 +1,26 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type Category = "Electronics" | "Subscriptions" | "Household" | "Documents";
-export const CATEGORIES: Category[] = ["Electronics", "Subscriptions", "Household", "Documents"];
+export const CATEGORIES = [
+  "Documents",
+  "Warranties",
+  "Subscriptions",
+  "Gift Cards",
+  "Return Windows",
+] as const;
+
+export type Category = (typeof CATEGORIES)[number];
+
+export function normalizeCategory(value: string | null | undefined): Category {
+  const match = CATEGORIES.find((c) => c.toLowerCase() === (value ?? "").trim().toLowerCase());
+  return match ?? "Documents";
+}
 
 export type Item = {
   id: string;
   title: string;
   category: string;
   brand: string | null;
+  summary: string | null;
   purchase_date: string | null;
   created_at: string;
 };
@@ -23,131 +36,68 @@ export type Deadline = {
   category?: string;
 };
 
-function daysFromNow(n: number) {
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
-  d.setDate(d.getDate() + n);
-  return d.toISOString();
-}
-
-export const MOCK_ITEMS: Item[] = [
-  {
-    id: "mock-1",
-    title: 'Samsung 55" QLED TV',
-    category: "Electronics",
-    brand: "Samsung",
-    purchase_date: "2026-08-20",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "mock-2",
-    title: "Netflix Premium",
-    category: "Subscriptions",
-    brand: "Netflix",
-    purchase_date: "2026-01-11",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "mock-3",
-    title: "Passport Renewal",
-    category: "Documents",
-    brand: null,
-    purchase_date: "2016-09-02",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "mock-4",
-    title: "Dyson V11 Vacuum",
-    category: "Household",
-    brand: "Dyson",
-    purchase_date: "2025-03-14",
-    created_at: new Date().toISOString(),
-  },
-];
-
-export const MOCK_DEADLINES: Deadline[] = [
-  {
-    id: "mock-d1",
-    item_id: "mock-1",
-    title: "TV return window closes",
-    deadline_date: daysFromNow(-1),
-    recommended_action: "Test the television today before the return window expires.",
-    status: "pending",
-    google_event_id: null,
-    category: "Electronics",
-  },
-  {
-    id: "mock-d2",
-    item_id: "mock-2",
-    title: "Netflix renews at higher price",
-    deadline_date: daysFromNow(3),
-    recommended_action: "Decide whether to downgrade the plan before renewal.",
-    status: "pending",
-    google_event_id: null,
-    category: "Subscriptions",
-  },
-  {
-    id: "mock-d3",
-    item_id: "mock-3",
-    title: "Passport expires",
-    deadline_date: daysFromNow(21),
-    recommended_action: "Book a renewal appointment and collect photos.",
-    status: "pending",
-    google_event_id: null,
-    category: "Documents",
-  },
-  {
-    id: "mock-d4",
-    item_id: "mock-4",
-    title: "Vacuum warranty ends",
-    deadline_date: daysFromNow(-12),
-    recommended_action: "Filter replaced under warranty.",
-    status: "completed",
-    google_event_id: null,
-    category: "Household",
-  },
-];
-
-export async function fetchItems(): Promise<{ data: Item[]; isMock: boolean }> {
+export async function fetchItems(): Promise<Item[]> {
   const { data, error } = await supabase
     .from("items")
-    .select("id,title,category,brand,purchase_date,created_at")
+    .select("id,title,category,brand,summary,purchase_date,created_at")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  if (!data || data.length === 0) return { data: MOCK_ITEMS, isMock: true };
-  return { data: data as Item[], isMock: false };
+  return (data ?? []) as Item[];
 }
 
-export async function fetchDeadlines(): Promise<{ data: Deadline[]; isMock: boolean }> {
+export async function fetchDeadlines(): Promise<Deadline[]> {
   const { data, error } = await supabase
     .from("deadlines")
-    .select("id,item_id,title,deadline_date,recommended_action,status,google_event_id,items(category)")
+    .select(
+      "id,item_id,title,deadline_date,recommended_action,status,google_event_id,items(category)",
+    )
     .order("deadline_date", { ascending: true });
   if (error) throw error;
-  if (!data || data.length === 0) return { data: MOCK_DEADLINES, isMock: true };
-  const rows = (data as unknown as (Deadline & { items?: { category?: string } | null })[]).map(
-    (row) => ({ ...row, category: row.items?.category ?? "Documents" }),
-  );
-  return { data: rows, isMock: false };
+  const rows = (data ?? []) as unknown as (Deadline & { items?: { category?: string } | null })[];
+  return rows.map((row) => ({ ...row, category: normalizeCategory(row.items?.category) }));
+}
+
+export async function searchItems(term: string): Promise<Item[]> {
+  const q = term.trim();
+  if (q.length < 2) return [];
+  const pattern = `%${q.replace(/[%_]/g, "")}%`;
+  const { data, error } = await supabase
+    .from("items")
+    .select("id,title,category,brand,summary,purchase_date,created_at")
+    .or(`title.ilike.${pattern},category.ilike.${pattern},summary.ilike.${pattern}`)
+    .order("created_at", { ascending: false })
+    .limit(8);
+  if (error) throw error;
+  return (data ?? []) as Item[];
+}
+
+export function daysUntil(date: string) {
+  return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
+}
+
+/** Deadlines due within the next 7 days (including overdue), excluding completed ones. */
+export function upcomingWithinWeek(deadlines: Deadline[]) {
+  return deadlines
+    .filter((d) => d.status !== "completed" && daysUntil(d.deadline_date) <= 7)
+    .sort((a, b) => +new Date(a.deadline_date) - +new Date(b.deadline_date));
 }
 
 export function urgencyOf(deadline: Deadline) {
   if (deadline.status === "completed") return "completed" as const;
-  const diff = new Date(deadline.deadline_date).getTime() - Date.now();
-  const days = Math.ceil(diff / 86400000);
+  const days = daysUntil(deadline.deadline_date);
   if (days < 0) return "overdue" as const;
-  if (days <= 0) return "today" as const;
+  if (days === 0) return "today" as const;
   if (days <= 7) return "week" as const;
   return "later" as const;
 }
 
 export function timeRemaining(deadline: Deadline) {
-  const days = Math.ceil((new Date(deadline.deadline_date).getTime() - Date.now()) / 86400000);
+  const days = daysUntil(deadline.deadline_date);
   if (deadline.status === "completed") return "Completed";
   if (days < 0) return `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"}`;
   if (days === 0) return "Due today";
-  if (days === 1) return "Ends tomorrow";
-  return `Ends in ${days} days`;
+  if (days === 1) return "Due tomorrow";
+  return `Due in ${days} days`;
 }
 
 export function greeting() {
