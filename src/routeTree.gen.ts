@@ -13,8 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedItemsRouteImport } from './routes/_authenticated/items'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedVaultRouteImport } from './routes/_authenticated/vault'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,14 +35,14 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedItemsRoute = AuthenticatedItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVaultRoute = AuthenticatedVaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
@@ -50,15 +50,15 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/items': typeof AuthenticatedItemsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/vault': typeof AuthenticatedVaultRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
-  '/items': typeof AuthenticatedItemsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/vault': typeof AuthenticatedVaultRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -66,22 +66,22 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
-  '/_authenticated/items': typeof AuthenticatedItemsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/vault': typeof AuthenticatedVaultRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/calendar' | '/home' | '/items' | '/settings'
+  fullPaths: '/' | '/calendar' | '/home' | '/settings' | '/vault'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/home' | '/items' | '/settings'
+  to: '/' | '/calendar' | '/home' | '/settings' | '/vault'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
-    | '/_authenticated/items'
     | '/_authenticated/settings'
+    | '/_authenticated/vault'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,18 +119,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/items': {
-      id: '/_authenticated/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof AuthenticatedItemsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vault': {
+      id: '/_authenticated/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof AuthenticatedVaultRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -139,15 +139,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
-  AuthenticatedItemsRoute: typeof AuthenticatedItemsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedVaultRoute: typeof AuthenticatedVaultRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
-  AuthenticatedItemsRoute: AuthenticatedItemsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedVaultRoute: AuthenticatedVaultRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
