@@ -132,9 +132,32 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
-/* CivicDesk — always-dark "liquid glass" theme */
+/* CivicDesk — "liquid glass" theme, light by default */
 :root {
   --radius: 1rem;
+  --background: oklch(0.982 0.003 247);
+  --foreground: oklch(0.21 0.03 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.03 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.03 265);
+  --primary: oklch(0.55 0.19 258);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.01 258);
+  --secondary-foreground: oklch(0.21 0.03 265);
+  --muted: oklch(0.95 0.01 258);
+  --muted-foreground: oklch(0.5 0.02 265);
+  --accent: oklch(0.6 0.2 300);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.87 0.01 255 / 60%);
+  --input: oklch(0.87 0.01 255 / 60%);
+  --ring: oklch(0.55 0.19 258);
+  --app-bg: oklch(0.982 0.003 247);
+}
+
+.dark {
   --background: oklch(0.145 0.02 265);
   --foreground: oklch(0.99 0 0);
   --card: oklch(0.21 0.02 265);
@@ -154,6 +177,7 @@
   --border: oklch(1 0 0 / 15%);
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.62 0.19 258);
+  --app-bg: oklch(0.145 0.02 265);
 }
 
 @layer base {
@@ -164,24 +188,45 @@
   html,
   body {
     min-height: 100dvh;
-    background-color: oklch(0.145 0.02 265);
+    background-color: var(--app-bg);
     color: var(--color-foreground);
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Accessibility: global text scaling (all rem-based Tailwind sizes follow) */
+  html {
+    font-size: 16px;
+  }
+  html[data-text-size="small"] {
+    font-size: 14px;
+  }
+  html[data-text-size="large"] {
+    font-size: 18.5px;
   }
 }
 
 @utility glass {
   backdrop-filter: blur(24px);
-  background-color: rgb(255 255 255 / 0.07);
-  border: 1px solid rgb(255 255 255 / 0.15);
-  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.6);
+  background-color: rgb(255 255 255 / 0.55);
+  border: 1px solid rgb(203 213 225 / 0.5);
+  box-shadow: 0 10px 30px -12px rgb(15 23 42 / 0.18);
+  :where(.dark) & {
+    background-color: rgb(255 255 255 / 0.07);
+    border-color: rgb(255 255 255 / 0.15);
+    box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.6);
+  }
 }
 
 @utility glass-strong {
   backdrop-filter: blur(32px);
-  background-color: rgb(0 0 0 / 0.45);
-  border: 1px solid rgb(255 255 255 / 0.15);
-  box-shadow: 0 12px 36px -12px rgb(0 0 0 / 0.8);
+  background-color: rgb(255 255 255 / 0.8);
+  border: 1px solid rgb(203 213 225 / 0.6);
+  box-shadow: 0 12px 36px -14px rgb(15 23 42 / 0.28);
+  :where(.dark) & {
+    background-color: rgb(2 6 23 / 0.7);
+    border-color: rgb(255 255 255 / 0.15);
+    box-shadow: 0 12px 36px -12px rgb(0 0 0 / 0.8);
+  }
 }
 
 @utility safe-bottom {

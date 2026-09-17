@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
@@ -14,14 +14,16 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "CivicDesk tracks your warranties, subscriptions and document deadlines, and tells you exactly what to do before time runs out.",
+          "CivicDesk reads your receipts, warranties and documents, sets the deadline for you and tells you exactly what to do before time runs out.",
       },
       { property: "og:title", content: "CivicDesk — Never miss a deadline again" },
       {
         property: "og:description",
         content:
-          "Capture a receipt, get a deadline, sync it to your calendar. Your personal life-admin assistant.",
+          "Scan a document, get a deadline, sync it to your calendar. Your personal life-admin assistant.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,
@@ -29,10 +31,8 @@ export const Route = createFileRoute("/")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -56,27 +56,35 @@ function AuthPage() {
     }
     setLoading(true);
     try {
-      if (tab === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: name || email.split("@")[0] },
-          },
-        });
-        if (error) throw error;
-        if (!data.session) {
-          toast.success("Check your inbox to confirm your email, then sign in.");
-          setTab("signin");
-        } else {
-          navigate({ to: "/home", replace: true });
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+      const signIn = await supabase.auth.signInWithPassword({ email, password });
+      if (!signIn.error) {
         navigate({ to: "/home", replace: true });
+        return;
       }
+
+      const signUp = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { full_name: email.split("@")[0] },
+        },
+      });
+      if (signUp.error) {
+        toast.error(signUp.error.message);
+        return;
+      }
+      if (signUp.data.session) {
+        navigate({ to: "/home", replace: true });
+        return;
+      }
+
+      const retry = await supabase.auth.signInWithPassword({ email, password });
+      if (retry.error) {
+        toast.success("Check your inbox to confirm your email, then sign in.");
+        return;
+      }
+      navigate({ to: "/home", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -105,40 +113,17 @@ function AuthPage() {
     <Shell>
       <main className="safe-top flex min-h-[100dvh] flex-col justify-center px-6 pb-10">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/20">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15">
             <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">CivicDesk</h1>
-          <p className="mt-2 text-sm text-white/60">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">CivicDesk</h1>
+          <p className="mt-2 text-sm text-foreground/60">
             Your life admin, captured, scheduled and handled.
           </p>
         </div>
 
         <div className="glass rounded-3xl p-5">
-          <div className="mb-5 flex rounded-2xl bg-white/[0.06] p-1">
-            {(["signin", "signup"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`press min-h-11 flex-1 rounded-xl text-sm font-semibold ${
-                  tab === t ? "bg-white/15 text-white" : "text-white/55"
-                }`}
-              >
-                {t === "signin" ? "Sign in" : "Sign up"}
-              </button>
-            ))}
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-3">
-            {tab === "signup" ? (
-              <GlassInput
-                label="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Alex Doe"
-                autoComplete="name"
-              />
-            ) : null}
             <GlassInput
               label="Email"
               type="email"
@@ -154,17 +139,20 @@ function AuthPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
-              autoComplete={tab === "signup" ? "new-password" : "current-password"}
+              autoComplete="current-password"
             />
             <GlassButton type="submit" loading={loading} className="w-full">
-              {tab === "signin" ? "Sign in" : "Create account"}
+              Continue
             </GlassButton>
+            <p className="text-center text-xs text-foreground/50">
+              New here? Your account is created automatically.
+            </p>
           </form>
 
-          <div className="my-4 flex items-center gap-3 text-[11px] text-white/40">
-            <span className="h-px flex-1 bg-white/15" />
+          <div className="my-4 flex items-center gap-3 text-xs text-foreground/40">
+            <span className="h-px flex-1 bg-border" />
             OR
-            <span className="h-px flex-1 bg-white/15" />
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <GlassButton variant="glass" className="w-full" onClick={handleGoogle} disabled={loading}>
@@ -172,9 +160,18 @@ function AuthPage() {
           </GlassButton>
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-white/35">
-          CivicDesk Beta by Stratustal
+        <p className="mt-6 text-center text-xs text-foreground/50">
+          By continuing you agree to our{" "}
+          <Link to="/terms" className="font-medium text-primary">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="font-medium text-primary">
+            Privacy Policy
+          </Link>
+          .
         </p>
+        <p className="mt-3 text-center text-xs text-foreground/35">CivicDesk by Stratustal</p>
       </main>
     </Shell>
   );

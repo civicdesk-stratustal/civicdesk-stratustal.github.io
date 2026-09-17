@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { CalendarDays, Home, Package, Settings as SettingsIcon } from "lucide-react";
+import { CalendarDays, Home, Lock, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Shell } from "@/components/glass";
 import { PinLockModal } from "@/components/PinLockModal";
@@ -45,16 +45,14 @@ function AppLayout() {
         <Outlet />
       </div>
       <BottomNav />
-      {locked ? (
-        <PinLockModal mode={needsSetup ? "setup" : "unlock"} onSuccess={unlock} />
-      ) : null}
+      {locked ? <PinLockModal mode={needsSetup ? "setup" : "unlock"} onSuccess={unlock} /> : null}
     </Shell>
   );
 }
 
 const TABS = [
   { to: "/home", label: "Home", Icon: Home },
-  { to: "/items", label: "Items", Icon: Package },
+  { to: "/vault", label: "Vault", Icon: Lock },
   { to: "/calendar", label: "Calendar", Icon: CalendarDays },
   { to: "/settings", label: "Settings", Icon: SettingsIcon },
 ] as const;
@@ -71,11 +69,11 @@ function BottomNav() {
             to={to}
             aria-label={label}
             className={`press flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-full px-3 ${
-              active ? "text-white" : "text-white/50"
+              active ? "text-primary" : "text-foreground/50"
             }`}
           >
             <Icon className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{label}</span>
+            <span className="text-xs font-medium">{label}</span>
           </Link>
         );
       })}

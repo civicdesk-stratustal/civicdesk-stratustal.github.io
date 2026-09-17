@@ -55,13 +55,13 @@ export function PinLockModal({
   const press = (digit: string) => setEntry((e) => (e.length < 4 ? e + digit : e));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-6 backdrop-blur-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-6 backdrop-blur-2xl">
       <div className="glass w-full max-w-sm rounded-3xl p-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15">
           <ShieldCheck className="h-6 w-6 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
-        <p className="mt-1 text-xs text-white/60">
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        <p className="mt-1 text-xs text-foreground/60">
           {settingUp
             ? "Your PIN stays on this device and locks CivicDesk when you switch away."
             : "CivicDesk locked while you were away."}
@@ -71,8 +71,8 @@ export function PinLockModal({
           {[0, 1, 2, 3].map((i) => (
             <span
               key={i}
-              className={`h-3.5 w-3.5 rounded-full border border-white/40 ${
-                entry.length > i ? "bg-white" : "bg-white/10"
+              className={`h-3.5 w-3.5 rounded-full border border-foreground/30 ${
+                entry.length > i ? "bg-foreground" : "bg-foreground/10"
               }`}
             />
           ))}
@@ -98,7 +98,7 @@ export function PinLockModal({
         {onCancel ? (
           <button
             onClick={onCancel}
-            className="press mt-5 min-h-11 w-full rounded-2xl text-sm font-medium text-white/60"
+            className="press mt-5 min-h-11 w-full rounded-2xl text-sm font-medium text-foreground/60"
           >
             Cancel
           </button>
@@ -121,8 +121,8 @@ function KeyButton({
     <button
       type="button"
       onClick={onClick}
-      className={`press mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/15 text-xl font-semibold text-white ${
-        subtle ? "bg-white/[0.04] text-white/70" : "bg-white/[0.09]"
+      className={`press mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-border text-xl font-semibold text-foreground ${
+        subtle ? "bg-foreground/[0.04] text-foreground/70" : "bg-foreground/[0.08]"
       }`}
     >
       {children}
