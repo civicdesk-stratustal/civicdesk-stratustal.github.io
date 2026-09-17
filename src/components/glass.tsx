@@ -27,11 +27,10 @@ export function GlassButton({
   ...rest
 }: ButtonProps) {
   const variants: Record<string, string> = {
-    primary:
-      "bg-primary text-primary-foreground shadow-lg shadow-primary/30 border border-white/10",
+    primary: "bg-primary text-primary-foreground shadow-lg shadow-primary/25 border border-primary/20",
     glass: "glass text-foreground",
     ghost: "text-foreground/70 border border-transparent",
-    danger: "bg-destructive/90 text-destructive-foreground border border-white/10",
+    danger: "bg-destructive/90 text-destructive-foreground border border-destructive/20",
   };
   return (
     <button
@@ -44,7 +43,7 @@ export function GlassButton({
       {...rest}
     >
       {loading ? (
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
       ) : null}
       {children}
     </button>
@@ -63,7 +62,7 @@ export function GlassInput({ label, error, className, ...rest }: InputProps) {
       ) : null}
       <input
         className={cn(
-          "min-h-11 w-full rounded-2xl border border-white/15 bg-white/[0.06] px-4 text-sm text-foreground placeholder:text-foreground/35 outline-none focus:border-primary/70 focus:ring-2 focus:ring-primary/30",
+          "min-h-11 w-full rounded-2xl border border-border bg-foreground/[0.04] px-4 text-sm text-foreground placeholder:text-foreground/35 outline-none focus:border-primary/70 focus:ring-2 focus:ring-primary/25",
           error && "border-destructive/70",
           className,
         )}
@@ -77,16 +76,16 @@ export function GlassInput({ label, error, className, ...rest }: InputProps) {
 export function Orbs() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-gradient-to-tr from-blue-600/25 via-purple-600/15 to-transparent blur-3xl" />
-      <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-gradient-to-tr from-purple-600/20 via-blue-500/10 to-transparent blur-3xl" />
-      <div className="absolute -bottom-28 left-1/4 h-72 w-72 rounded-full bg-gradient-to-tr from-cyan-500/15 via-blue-600/10 to-transparent blur-3xl" />
+      <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-gradient-to-tr from-blue-500/25 via-purple-500/15 to-transparent blur-3xl" />
+      <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-gradient-to-tr from-purple-500/20 via-blue-500/10 to-transparent blur-3xl" />
+      <div className="absolute -bottom-28 left-1/4 h-72 w-72 rounded-full bg-gradient-to-tr from-cyan-400/20 via-blue-500/10 to-transparent blur-3xl" />
     </div>
   );
 }
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative mx-auto min-h-[100dvh] w-full max-w-md overflow-x-hidden bg-slate-950 shadow-2xl">
+    <div className="relative mx-auto min-h-[100dvh] w-full max-w-md overflow-x-hidden bg-background shadow-2xl">
       <Orbs />
       <div className="relative z-10">{children}</div>
     </div>
