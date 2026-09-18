@@ -109,6 +109,18 @@ function AuthPage() {
     navigate({ to: "/home", replace: true });
   }
 
+  async function handleGithub() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      setLoading(false);
+      toast.error("GitHub sign-in failed. Please try again.");
+    }
+  }
+
   return (
     <Shell>
       <main className="safe-top flex min-h-[100dvh] flex-col justify-center px-6 pb-10">
@@ -155,9 +167,14 @@ function AuthPage() {
             <span className="h-px flex-1 bg-border" />
           </div>
 
-          <GlassButton variant="glass" className="w-full" onClick={handleGoogle} disabled={loading}>
-            Continue with Google
-          </GlassButton>
+          <div className="space-y-3">
+            <GlassButton variant="glass" className="w-full" onClick={handleGoogle} disabled={loading}>
+              Continue with Google
+            </GlassButton>
+            <GlassButton variant="glass" className="w-full" onClick={handleGithub} disabled={loading}>
+              Continue with GitHub
+            </GlassButton>
+          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-foreground/50">
