@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Delete, ShieldCheck } from "lucide-react";
-import { setPin as savePin, verifyPin } from "@/lib/pin";
+import { hasPin, setPin as savePin, verifyPin } from "@/lib/pin";
 
 type Mode = "unlock" | "setup" | "change";
+type Stage = "current" | "new" | "confirm";
 
 export function PinLockModal({
   mode,
@@ -14,43 +15,63 @@ export function PinLockModal({
   onCancel?: () => void;
 }) {
   const [entry, setEntry] = useState("");
-  const [confirming, setConfirming] = useState<string | null>(null);
+  const [stage, setStage] = useState<Stage>(() =>
+    mode === "unlock" ? "current" : mode === "change" && hasPin() ? "current" : "new",
+  );
+  const [firstEntry, setFirstEntry] = useState("");
   const [error, setError] = useState("");
-
-  const settingUp = mode !== "unlock";
 
   useEffect(() => {
     if (entry.length !== 4) return;
     const t = setTimeout(() => {
-      if (!settingUp) {
-        if (verifyPin(entry)) onSuccess();
-        else {
+      if (stage === "current") {
+        if (!verifyPin(entry)) {
           setError("Incorrect PIN");
           setEntry("");
+          return;
         }
-        return;
-      }
-      if (confirming === null) {
-        setConfirming(entry);
+        if (mode === "unlock") {
+          onSuccess();
+          return;
+        }
+        setStage("new");
         setEntry("");
         setError("");
-      } else if (confirming === entry) {
+        return;
+      }
+      if (stage === "new") {
+        setFirstEntry(entry);
+        setStage("confirm");
+        setEntry("");
+        setError("");
+        return;
+      }
+      if (firstEntry === entry) {
         savePin(entry);
         onSuccess();
       } else {
         setError("PINs did not match, start again");
-        setConfirming(null);
+        setFirstEntry("");
+        setStage("new");
         setEntry("");
       }
     }, 120);
     return () => clearTimeout(t);
-  }, [entry, confirming, settingUp, onSuccess]);
+  }, [entry, stage, firstEntry, mode, onSuccess]);
 
-  const title = !settingUp
-    ? "Enter your PIN"
-    : confirming === null
-      ? "Create a 4-digit PIN"
-      : "Confirm your PIN";
+  const settingUp = mode !== "unlock";
+  const title =
+    stage === "current"
+      ? mode === "unlock"
+        ? "Enter your PIN"
+        : "Enter current PIN"
+      : stage === "new"
+        ? mode === "change"
+          ? "Enter new PIN"
+          : "Create a 4-digit PIN"
+        : mode === "change"
+          ? "Confirm new PIN"
+          : "Confirm your PIN";
 
   const press = (digit: string) => setEntry((e) => (e.length < 4 ? e + digit : e));
 
