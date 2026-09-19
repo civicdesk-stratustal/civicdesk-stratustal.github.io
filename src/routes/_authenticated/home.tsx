@@ -162,6 +162,7 @@ export function ActionCard({
   deadline: Deadline;
   onComplete: () => void;
 }) {
+  const [viewing, setViewing] = useState(false);
   const u = urgencyOf(deadline);
   const tone =
     u === "overdue"

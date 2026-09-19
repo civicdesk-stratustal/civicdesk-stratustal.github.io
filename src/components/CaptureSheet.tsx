@@ -120,12 +120,21 @@ export function CaptureSheet({
       if (draft.deadline_date) {
         let eventId: string | null = null;
         if (calendarSync) {
-          eventId = await createCalendarEvent({
+          const result = await createCalendarEvent({
             title: draft.title,
             date: draft.deadline_date,
             description: draft.recommended_action,
           });
-          if (!eventId) toast.message("Saved. Calendar sync needs a Google sign-in.");
+          eventId = result.eventId;
+          if (result.status === "unauthorized") {
+            toast.error(
+              "Google Calendar access expired. Calendar sync is off — re-authorize it in Settings.",
+            );
+          } else if (result.status === "no-token") {
+            toast.message("Saved. Authorize Google Calendar in Settings to sync deadlines.");
+          } else if (result.status === "failed") {
+            toast.message("Saved, but the calendar event could not be created.");
+          }
         }
         const { error: dlErr } = await supabase.from("deadlines").insert({
           user_id: uid,
