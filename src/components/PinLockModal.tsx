@@ -22,7 +22,18 @@ export function PinLockModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const nextStage: Stage =
+      mode === "unlock" ? "current" : mode === "change" && hasPin() ? "current" : "new";
+
+    setEntry("");
+    setFirstEntry("");
+    setError("");
+    setStage(nextStage);
+  }, [mode]);
+
+  useEffect(() => {
     if (entry.length !== 4) return;
+
     const t = setTimeout(() => {
       if (stage === "current") {
         if (!verifyPin(entry)) {
@@ -30,15 +41,18 @@ export function PinLockModal({
           setEntry("");
           return;
         }
+
         if (mode === "unlock") {
           onSuccess();
           return;
         }
+
         setStage("new");
         setEntry("");
         setError("");
         return;
       }
+
       if (stage === "new") {
         setFirstEntry(entry);
         setStage("confirm");
@@ -46,6 +60,7 @@ export function PinLockModal({
         setError("");
         return;
       }
+
       if (firstEntry === entry) {
         savePin(entry);
         onSuccess();
@@ -56,10 +71,12 @@ export function PinLockModal({
         setEntry("");
       }
     }, 120);
+
     return () => clearTimeout(t);
   }, [entry, stage, firstEntry, mode, onSuccess]);
 
   const settingUp = mode !== "unlock";
+
   const title =
     stage === "current"
       ? mode === "unlock"
@@ -81,7 +98,9 @@ export function PinLockModal({
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15">
           <ShieldCheck className="h-6 w-6 text-primary" />
         </div>
+
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+
         <p className="mt-1 text-xs text-foreground/60">
           {settingUp
             ? "Your PIN stays on this device and locks CivicDesk when you switch away."
@@ -107,10 +126,13 @@ export function PinLockModal({
               {d}
             </KeyButton>
           ))}
+
           <KeyButton onClick={() => setEntry("")} subtle>
             <span className="text-xs font-medium">Clear</span>
           </KeyButton>
+
           <KeyButton onClick={() => press("0")}>0</KeyButton>
+
           <KeyButton onClick={() => setEntry((e) => e.slice(0, -1))} subtle>
             <Delete className="h-5 w-5" />
           </KeyButton>
