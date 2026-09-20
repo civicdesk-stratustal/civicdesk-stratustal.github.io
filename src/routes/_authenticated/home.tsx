@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CheckCircle2, FileUp } from "lucide-react";
+import { Camera, CheckCircle2, FileText, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassCard } from "@/components/glass";
 import { SearchBar } from "@/components/SearchBar";
 import { CaptureSheet } from "@/components/CaptureSheet";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import {
   fetchDeadlines,
   greeting,
@@ -189,10 +190,20 @@ export function ActionCard({
           {deadline.recommended_action}
         </p>
       ) : null}
-      {deadline.status !== "completed" ? (
-        <GlassButton variant="glass" className="mt-3 w-full" onClick={onComplete}>
-          <CheckCircle2 className="h-4 w-4" /> Mark complete
-        </GlassButton>
+      <div className="mt-3 grid gap-2">
+        {deadline.item_id ? (
+          <GlassButton variant="glass" className="w-full" onClick={() => setViewing(true)}>
+            <FileText className="h-4 w-4" /> View document
+          </GlassButton>
+        ) : null}
+        {deadline.status !== "completed" ? (
+          <GlassButton variant="glass" className="w-full" onClick={onComplete}>
+            <CheckCircle2 className="h-4 w-4" /> Mark complete
+          </GlassButton>
+        ) : null}
+      </div>
+      {viewing && deadline.item_id ? (
+        <DocumentViewer itemId={deadline.item_id} onClose={() => setViewing(false)} />
       ) : null}
     </GlassCard>
   );

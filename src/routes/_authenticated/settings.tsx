@@ -15,7 +15,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassCard } from "@/components/glass";
 import { PinLockModal } from "@/components/PinLockModal";
-import { clearProviderToken, getProviderToken } from "@/utils/googleCalendar";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  authorizeGoogleCalendar,
+  clearProviderToken,
+  getProviderToken,
+} from "@/utils/googleCalendar";
 import { useTheme, type TextSize } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -46,8 +51,11 @@ function SettingsPage() {
   const [sync, setSync] = useState(false);
   const [email, setEmail] = useState("");
   const [changingPin, setChangingPin] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
 
   useEffect(() => {
+    setHasToken(!!getProviderToken());
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
     supabase
       .from("profiles")
@@ -76,6 +84,14 @@ function SettingsPage() {
       toast.message("Sign in with Google to let CivicDesk add events to your calendar.");
     } else {
       toast.success(next ? "Calendar sync on" : "Calendar sync off");
+    }
+  }
+
+  async function reauthorize() {
+    try {
+      await authorizeGoogleCalendar();
+    } catch {
+      toast.error("Could not open Google authorization");
     }
   }
 
@@ -160,6 +176,10 @@ function SettingsPage() {
             />
           </button>
         </div>
+        <GlassButton variant="glass" className="mt-3 w-full" onClick={reauthorize}>
+          <CalendarCheck className="h-4 w-4" />
+          {hasToken ? "Re-authorize Google Calendar" : "Authorize Google Calendar"}
+        </GlassButton>
       </GlassCard>
 
       <GlassCard className="mb-3">
@@ -193,9 +213,25 @@ function SettingsPage() {
         <p className="mt-3 text-xs text-foreground/50">CivicDesk version 1.0 by Stratustal</p>
       </GlassCard>
 
-      <GlassButton variant="danger" className="w-full" onClick={signOut}>
+      <GlassButton variant="danger" className="w-full" onClick={() => setConfirmSignOut(true)}>
         <LogOut className="h-4 w-4" /> Sign out
       </GlassButton>
+
+      {confirmSignOut ? (
+        <ConfirmDialog
+          title="Sign out?"
+          message="Are you sure you want to sign out? You will need your credentials to access your Vault again."
+          confirmLabel="Sign Out"
+          cancelLabel="Cancel"
+          destructive
+          icon={<LogOut className="h-5 w-5 text-destructive" />}
+          onCancel={() => setConfirmSignOut(false)}
+          onConfirm={() => {
+            setConfirmSignOut(false);
+            void signOut();
+          }}
+        />
+      ) : null}
 
       {changingPin ? (
         <PinLockModal
