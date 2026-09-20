@@ -2,7 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const CATEGORY_LIST = ["Documents", "Warranties", "Subscriptions", "Gift Cards", "Return Windows"];
+const CATEGORY_LIST = [
+  "Documents",
+  "Warranties",
+  "Subscriptions",
+  "Gift Cards",
+  "Return Windows",
+];
+
+const MODEL = "google/gemma-4-26b-a4b-it";
 
 const InputSchema = z.object({
   files: z
@@ -25,77 +33,238 @@ export type DocumentAnalysis = {
   recommended_action: string;
 };
 
-const SYSTEM = `You read personal life-admin documents (receipts, warranties, invoices, subscription confirmations, gift cards, ID documents).
-Reply with STRICT JSON only, no markdown fences, using exactly this shape:
-{"category":"one of: ${CATEGORY_LIST.join(", ")}","title":"short item name","summary":"one or two sentence summary","deadline_date":"YYYY-MM-DD or null","recommended_action":"short practical action"}
-Rules: category MUST be exactly one of the listed values. deadline_date is the date the user must act by (warranty expiry, return window close, renewal date, document expiry); use null when the document has no deadline. Never invent facts that are not in the document.`;
+const SYSTEM = `You read personal life-admin documents such as receipts, warranties, invoices, subscription confirmations, gift cards, identity documents, and other important documents.
+
+Reply with STRICT JSON only, with exactly this shape:
+{
+  "category": "one of: ${CATEGORY_LIST.join(", ")}",
+  "title": "short item name",
+  "summary": "one or two sentence summary",
+  "deadline_date": "YYYY-MM-DD or null",
+  "recommended_action": "short practical action"
+}
+
+Rules:
+- category MUST be exactly one of the listed values.
+- deadline_date is the date the user must act by, such as a warranty expiry, return-window close, renewal date, payment deadline, or document expiry.
+- Use null when there is no clear deadline.
+- Never invent facts that are not present in the document.
+- If a date is ambiguous, use null rather than guessing.
+- Keep the title concise.
+- Keep the summary factual and useful.
+- Keep recommended_action practical and concise.
+- Return JSON only. No markdown fences.
+`;
 
 function extractJson(text: string): DocumentAnalysis | null {
   const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
-  if (start === -1 || end === -1) return null;
+
+  if (start === -1 || end === -1 || end <= start) {
+    return null;
+  }
+
   try {
-    const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Partial<DocumentAnalysis>;
+    const parsed = JSON.parse(
+      cleaned.slice(start, end + 1),
+    ) as Partial<DocumentAnalysis>;
+
     return {
-      category: CATEGORY_LIST.includes(String(parsed.category)) ? String(parsed.category) : "Documents",
+      category: CATEGORY_LIST.includes(String(parsed.category))
+        ? String(parsed.category)
+        : "Documents",
+
       title: String(parsed.title ?? "").slice(0, 120),
+
       summary: String(parsed.summary ?? "").slice(0, 600),
+
       deadline_date:
-        typeof parsed.deadline_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.deadline_date)
+        typeof parsed.deadline_date === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(parsed.deadline_date)
           ? parsed.deadline_date
           : null,
-      recommended_action: String(parsed.recommended_action ?? "").slice(0, 300),
+
+      recommended_action: String(
+        parsed.recommended_action ?? "",
+      ).slice(0, 300),
     };
   } catch {
     return null;
   }
 }
 
+type OpenRouterContentPart =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "image_url";
+      image_url: {
+        url: string;
+      };
+    }
+  | {
+      type: "file";
+      file: {
+        filename: string;
+        file_data: string;
+      };
+    };
+
+function createDocumentContent(
+  files: Array<{
+    name: string;
+    mimeType: string;
+    dataUrl: string;
+  }>,
+  today: string,
+): OpenRouterContentPart[] {
+  const content: OpenRouterContentPart[] = [
+    {
+      type: "text",
+      text: `Today is ${today}. Read the attached document(s) and return the required JSON object.`,
+    },
+  ];
+
+  for (const file of files) {
+    if (file.mimeType === "application/pdf") {
+      content.push({
+        type: "file",
+        file: {
+          filename: file.name,
+          file_data: file.dataUrl,
+        },
+      });
+      continue;
+    }
+
+    if (file.mimeType.startsWith("image/")) {
+      content.push({
+        type: "image_url",
+        image_url: {
+          url: file.dataUrl,
+        },
+      });
+      continue;
+    }
+
+    throw new Error(
+      `Unsupported document format: ${file.mimeType || "unknown"}. Please upload an image or PDF.`,
+    );
+  }
+
+  return content;
+}
+
 export const analyzeDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<DocumentAnalysis> => {
-    const apiKey = process.env['LOVABLE_API_KEY'];
-    if (!apiKey) throw new Error("Document reading is not configured yet.");
+    const apiKey = process.env["OPENROUTER_API_KEY"];
+
+    if (!apiKey) {
+      throw new Error("Document reading is not configured yet.");
+    }
 
     const today = new Date().toISOString().slice(0, 10);
-    const content: Array<Record<string, unknown>> = [
+
+    const content = createDocumentContent(data.files, today);
+
+    const res = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
       {
-        type: "text",
-        text: `Today is ${today}. Read the attached document(s) and return the JSON object.`,
-      },
-      ...data.files.map((f) => ({ type: "image_url", image_url: { url: f.dataUrl } })),
-    ];
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer":
+            process.env["APP_URL"] ??
+            "https://civicdesk.stratustal.workers.dev",
+          "X-Title": "CivicDesk",
+        },
+        body: JSON.stringify({
+          model: MODEL,
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3.8-flash",
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content },
-        ],
-      }),
-    });
+          messages: [
+            {
+              role: "system",
+              content: SYSTEM,
+            },
+            {
+              role: "user",
+              content,
+            },
+          ],
 
-    if (res.status === 429) throw new Error("Too many documents at once. Try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits have run out. Add credits to keep reading documents.");
+          temperature: 0.1,
+          max_tokens: 800,
+
+          response_format: {
+            type: "json_object",
+          },
+
+          // Prefer providers that do not collect prompts for training.
+          // OpenRouter applies this at the provider-routing layer.
+          provider: {
+            data_collection: "deny",
+          },
+        }),
+      },
+    );
+
+    if (res.status === 401) {
+      throw new Error("The document AI service is not configured correctly.");
+    }
+
+    if (res.status === 402) {
+      throw new Error(
+        "The document AI service has insufficient credits.",
+      );
+    }
+
+    if (res.status === 429) {
+      throw new Error(
+        "Too many documents at once. Try again in a moment.",
+      );
+    }
+
     if (!res.ok) {
       const body = await res.text();
-      console.error("AI gateway error", res.status, body);
-      throw new Error("The document could not be read automatically.");
+
+      console.error("OpenRouter error", {
+        status: res.status,
+        body,
+      });
+
+      throw new Error(
+        "The document could not be read automatically.",
+      );
     }
 
     const json = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: Array<{
+        message?: {
+          content?: string;
+        };
+      }>;
     };
+
     const text = json.choices?.[0]?.message?.content ?? "";
+
     const parsed = extractJson(text);
-    if (!parsed || !parsed.title) throw new Error("The document could not be read automatically.");
+
+    if (!parsed || !parsed.title) {
+      console.error("OpenRouter returned invalid document analysis", {
+        text,
+      });
+
+      throw new Error(
+        "The document could not be read automatically.",
+      );
+    }
+
     return parsed;
   });
