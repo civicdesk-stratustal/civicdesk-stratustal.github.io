@@ -10,13 +10,6 @@ type ServerEntry = {
   ) => Promise<Response> | Response;
 };
 
-type CloudflareEnv = {
-  SUPABASE_URL?: string;
-  SUPABASE_PUBLISHABLE_KEY?: string;
-  OPENROUTER_API_KEY?: string;
-  SUPABASE_PROJECT_ID?: string;
-};
-
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -27,27 +20,6 @@ async function getServerEntry(): Promise<ServerEntry> {
   }
 
   return serverEntryPromise;
-}
-
-function populateProcessEnv(env: unknown) {
-  const cloudflareEnv = env as CloudflareEnv;
-
-  if (cloudflareEnv.SUPABASE_URL) {
-    process.env.SUPABASE_URL = cloudflareEnv.SUPABASE_URL;
-  }
-
-  if (cloudflareEnv.SUPABASE_PUBLISHABLE_KEY) {
-    process.env.SUPABASE_PUBLISHABLE_KEY =
-      cloudflareEnv.SUPABASE_PUBLISHABLE_KEY;
-  }
-
-  if (cloudflareEnv.OPENROUTER_API_KEY) {
-    process.env.OPENROUTER_API_KEY = cloudflareEnv.OPENROUTER_API_KEY;
-  }
-
-  if (cloudflareEnv.SUPABASE_PROJECT_ID) {
-    process.env.SUPABASE_PROJECT_ID = cloudflareEnv.SUPABASE_PROJECT_ID;
-  }
 }
 
 async function normalizeCatastrophicSsrResponse(
@@ -99,11 +71,6 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      // Cloudflare provides bindings through `env`.
-      // The generated Supabase/TanStack server code expects
-      // them through process.env, so bridge the two here.
-      populateProcessEnv(env);
-
       const handler = await getServerEntry();
 
       const response = await handler.fetch(request, env, ctx);
