@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getServerEnv } from "./server-env";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const CATEGORY_LIST = [
@@ -163,7 +164,7 @@ export const analyzeDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<DocumentAnalysis> => {
-    const apiKey = process.env["OPENROUTER_API_KEY"];
+    const apiKey = getServerEnv("OPENROUTER_API_KEY");
 
     if (!apiKey) {
       throw new Error("Document reading is not configured yet.");
@@ -181,7 +182,7 @@ export const analyzeDocument = createServerFn({ method: "POST" })
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer":
-            process.env["APP_URL"] ??
+            getServerEnv("APP_URL") ??
             "https://civicdesk.stratustal.workers.dev",
           "X-Title": "CivicDesk",
         },
