@@ -1,7 +1,12 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  base: "/civicdesk-stratustal.github.io/", // MUST match your exact GitHub repository name, with slashes
-  plugins: [react()],
+  tanstackStart: {
+    server: {
+      entry: "server",
+    },
+  },
+
+  // Force the production/deployment build to run outside Lovable's sandbox.
+  nitro: true,
 });
