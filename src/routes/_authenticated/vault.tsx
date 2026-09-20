@@ -9,8 +9,9 @@ import {
   ShieldCheck,
   RefreshCw,
 } from "lucide-react";
-import { GlassCard } from "@/components/glass";
+import { GlassButton, GlassCard } from "@/components/glass";
 import { SearchBar } from "@/components/SearchBar";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import {
   CATEGORIES,
   fetchDeadlines,
@@ -46,6 +47,7 @@ const ICONS: Record<Category, typeof FileText> = {
 
 function VaultPage() {
   const [open, setOpen] = useState<Category | null>(null);
+  const [viewingItem, setViewingItem] = useState<string | null>(null);
   const { data: items, isLoading } = useQuery({ queryKey: ["items"], queryFn: fetchItems });
   const { data: deadlines } = useQuery({ queryKey: ["deadlines"], queryFn: fetchDeadlines });
 
@@ -88,11 +90,21 @@ function VaultPage() {
                   {item.summary ? (
                     <p className="mt-2 text-xs leading-relaxed text-foreground/60">{item.summary}</p>
                   ) : null}
+                  <GlassButton
+                    variant="glass"
+                    className="mt-3 w-full"
+                    onClick={() => setViewingItem(item.id)}
+                  >
+                    <FileText className="h-4 w-4" /> View document
+                  </GlassButton>
                 </GlassCard>
               );
             })
           )}
         </div>
+        {viewingItem ? (
+          <DocumentViewer itemId={viewingItem} onClose={() => setViewingItem(null)} />
+        ) : null}
       </div>
     );
   }
