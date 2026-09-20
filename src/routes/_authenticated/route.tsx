@@ -19,10 +19,9 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AppLayout() {
   const [locked, setLocked] = useState(true);
-  const [needsSetup, setNeedsSetup] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(() => !hasPin());
 
   useEffect(() => {
-    setNeedsSetup(!hasPin());
     supabase.auth.getSession().then(({ data }) => storeProviderToken(data.session?.provider_token));
   }, []);
 
