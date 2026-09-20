@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { GlassButton, GlassInput, Shell } from "@/components/glass";
 import { storeProviderToken } from "@/utils/googleCalendar";
 
@@ -46,17 +45,25 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!email.includes("@")) {
       toast.error("Enter a valid email address");
       return;
     }
+
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
     }
+
     setLoading(true);
+
     try {
-      const signIn = await supabase.auth.signInWithPassword({ email, password });
+      const signIn = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (!signIn.error) {
         navigate({ to: "/home", replace: true });
         return;
@@ -67,26 +74,41 @@ function AuthPage() {
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: email.split("@")[0] },
+          data: {
+            full_name: email.split("@")[0],
+          },
         },
       });
+
       if (signUp.error) {
         toast.error(signUp.error.message);
         return;
       }
+
       if (signUp.data.session) {
         navigate({ to: "/home", replace: true });
         return;
       }
 
-      const retry = await supabase.auth.signInWithPassword({ email, password });
+      const retry = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (retry.error) {
-        toast.success("Check your inbox to confirm your email, then sign in.");
+        toast.success(
+          "Check your inbox to confirm your email, then sign in.",
+        );
         return;
       }
+
       navigate({ to: "/home", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong",
+      );
     } finally {
       setLoading(false);
     }
@@ -94,27 +116,34 @@ function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-      extraParams: { access_type: "offline", prompt: "consent" },
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
     });
-    if (result.error) {
+
+    if (error) {
       setLoading(false);
       toast.error("Google sign-in failed. Please try again.");
-      return;
     }
-    if (result.redirected) return;
-    const { data } = await supabase.auth.getSession();
-    storeProviderToken(data.session?.provider_token);
-    navigate({ to: "/home", replace: true });
   }
 
   async function handleGithub() {
     setLoading(true);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: window.location.origin,
+      },
     });
+
     if (error) {
       setLoading(false);
       toast.error("GitHub sign-in failed. Please try again.");
@@ -128,7 +157,11 @@ function AuthPage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15">
             <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">CivicDesk</h1>
+
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            CivicDesk
+          </h1>
+
           <p className="mt-2 text-sm text-foreground/60">
             Your life admin, captured, scheduled and handled.
           </p>
@@ -145,6 +178,7 @@ function AuthPage() {
               placeholder="you@email.com"
               autoComplete="email"
             />
+
             <GlassInput
               label="Password"
               type="password"
@@ -153,9 +187,15 @@ function AuthPage() {
               placeholder="At least 6 characters"
               autoComplete="current-password"
             />
-            <GlassButton type="submit" loading={loading} className="w-full">
+
+            <GlassButton
+              type="submit"
+              loading={loading}
+              className="w-full"
+            >
               Continue
             </GlassButton>
+
             <p className="text-center text-xs text-foreground/50">
               New here? Your account is created automatically.
             </p>
@@ -168,10 +208,21 @@ function AuthPage() {
           </div>
 
           <div className="space-y-3">
-            <GlassButton variant="glass" className="w-full" onClick={handleGoogle} disabled={loading}>
+            <GlassButton
+              variant="glass"
+              className="w-full"
+              onClick={handleGoogle}
+              disabled={loading}
+            >
               Continue with Google
             </GlassButton>
-            <GlassButton variant="glass" className="w-full" onClick={handleGithub} disabled={loading}>
+
+            <GlassButton
+              variant="glass"
+              className="w-full"
+              onClick={handleGithub}
+              disabled={loading}
+            >
               Continue with GitHub
             </GlassButton>
           </div>
@@ -179,16 +230,25 @@ function AuthPage() {
 
         <p className="mt-6 text-center text-xs text-foreground/50">
           By continuing you agree to our{" "}
-          <Link to="/terms" className="font-medium text-primary">
+          <Link
+            to="/terms"
+            className="font-medium text-primary"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link to="/privacy" className="font-medium text-primary">
+          <Link
+            to="/privacy"
+            className="font-medium text-primary"
+          >
             Privacy Policy
           </Link>
           .
         </p>
-        <p className="mt-3 text-center text-xs text-foreground/35">CivicDesk by Stratustal</p>
+
+        <p className="mt-3 text-center text-xs text-foreground/35">
+          CivicDesk by Stratustal
+        </p>
       </main>
     </Shell>
   );
