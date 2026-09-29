@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   CalendarCheck,
   FileText,
+  Trash2,
   KeyRound,
   LogOut,
   Moon,
@@ -18,6 +19,8 @@ import { GlassButton, GlassCard } from "@/components/glass";
 import { PinLockModal } from "@/components/PinLockModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { startCalendarConnection } from "@/lib/calendar.functions";
+import { deleteAccount } from "@/lib/account.functions";
+import { clearPin } from "@/lib/pin";
 import { useTheme, type TextSize } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -49,6 +52,8 @@ function SettingsPage() {
   const [email, setEmail] = useState("");
   const [changingPin, setChangingPin] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const startConnection = useServerFn(startCalendarConnection);
   const [connected, setConnected] = useState(false);
 
@@ -95,6 +100,22 @@ function SettingsPage() {
       window.location.assign(url);
     } catch {
       toast.error("Could not open calendar authorization");
+    }
+  }
+
+  async function removeAccount() {
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      clearPin();
+      await qc.cancelQueries();
+      qc.clear();
+      await supabase.auth.signOut();
+      navigate({ to: "/", replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete your account");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -215,9 +236,36 @@ function SettingsPage() {
         <p className="mt-3 text-xs text-foreground/50">CivicDesk version 1.0 by Stratustal</p>
       </GlassCard>
 
+      <GlassCard className="mb-3">
+        <GlassButton
+          variant="ghost"
+          className="w-full justify-start px-0 text-destructive"
+          onClick={() => setConfirmDelete(true)}
+          loading={deleting}
+        >
+          <Trash2 className="h-4 w-4" /> Delete account and data
+        </GlassButton>
+      </GlassCard>
+
       <GlassButton variant="danger" className="w-full" onClick={() => setConfirmSignOut(true)}>
         <LogOut className="h-4 w-4" /> Sign out
       </GlassButton>
+
+      {confirmDelete ? (
+        <ConfirmDialog
+          title="Delete your account?"
+          message="This permanently removes your profile, vault items, deadlines, calendar connection, and uploaded documents. This cannot be undone."
+          confirmLabel="Delete account"
+          cancelLabel="Keep account"
+          destructive
+          icon={<Trash2 className="h-5 w-5 text-destructive" />}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => {
+            setConfirmDelete(false);
+            void removeAccount();
+          }}
+        />
+      ) : null}
 
       {confirmSignOut ? (
         <ConfirmDialog
