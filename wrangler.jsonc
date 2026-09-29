@@ -10,7 +10,10 @@
   "vars": {
     "SUPABASE_PROJECT_ID": "vkrwrnpvdfybbnojaekj",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_PnANOrERe944bDi27CoGLg_hPk3jHoY",
-    "SUPABASE_URL": "https://vkrwrnpvdfybbnojaekj.supabase.co"
+    "SUPABASE_URL": "https://vkrwrnpvdfybbnojaekj.supabase.co",
+    "VITE_SUPABASE_PROJECT_ID": "vkrwrnpvdfybbnojaekj",
+    "VITE_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_PnANOrERe944bDi27CoGLg_hPk3jHoY",
+    "VITE_SUPABASE_URL": "https://vkrwrnpvdfybbnojaekj.supabase.co"
   },
 
   "main": ".output/server/index.mjs",
@@ -24,7 +27,8 @@
       "type": "ESModule",
       "globs": ["**/*.mjs", "**/*.js"]
     }
-  ],
+  ]
+}
 
   "observability": {
     "enabled": true
