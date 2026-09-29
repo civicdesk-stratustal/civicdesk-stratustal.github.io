@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "How CivicDesk stores your documents, isolates your data with row-level security and uses calendar access only to sync deadlines you request.",
+          "How CivicDesk stores your documents and isolates your data with row-level security.",
       },
       { property: "og:title", content: "Privacy Policy | CivicDesk" },
       {
@@ -50,8 +50,7 @@ function PrivacyPage() {
             <p>
               Account details (your email address and, where you provide it, your name); the
               documents and images you upload; the details extracted from them such as titles,
-              summaries, categories and deadline dates; your app preferences; and, where you enable
-              it, the calendar connection authorisation used for calendar syncing.
+              summaries, categories and deadline dates; and your app preferences.
             </p>
           </section>
           <section>
@@ -79,14 +78,7 @@ function PrivacyPage() {
               deadlines cannot be read or modified by another user of CivicDesk.
             </p>
           </section>
-          <section>
-            <h2 className="mb-1 font-semibold text-foreground">Calendar connection</h2>
-            <p>
-              If you turn on calendar sync, our calendar provider uses OAuth strictly to create the
-              deadline events you have asked us to sync. We do not share this access with anyone;
-              you can turn sync off in Settings and revoke access with your calendar provider.
-            </p>
-          </section>
+
           <section>
             <h2 className="mb-1 font-semibold text-foreground">Your device PIN</h2>
             <p>

@@ -27,7 +27,8 @@ export function GlassButton({
   ...rest
 }: ButtonProps) {
   const variants: Record<string, string> = {
-    primary: "bg-primary text-primary-foreground shadow-lg shadow-primary/25 border border-primary/20",
+    primary:
+      "bg-primary text-primary-foreground shadow-lg shadow-primary/25 border border-primary/20",
     glass: "glass text-foreground",
     ghost: "text-foreground/70 border border-transparent",
     danger: "bg-destructive/90 text-destructive-foreground border border-destructive/20",

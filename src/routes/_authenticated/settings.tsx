@@ -1,24 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import {
-  CalendarCheck,
-  FileText,
-  Trash2,
-  KeyRound,
-  LogOut,
-  Moon,
-  ShieldCheck,
-  Sun,
-  Type,
-} from "lucide-react";
+import { FileText, Trash2, KeyRound, LogOut, Moon, ShieldCheck, Sun, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassCard } from "@/components/glass";
 import { PinLockModal } from "@/components/PinLockModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { startCalendarConnection } from "@/lib/calendar.functions";
 import { deleteAccount } from "@/lib/account.functions";
 import { clearPin } from "@/lib/pin";
 import { useTheme, type TextSize } from "@/lib/theme";
@@ -29,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { title: "Settings | CivicDesk" },
       {
         name: "description",
-        content: "Appearance, text size, calendar sync, your device PIN and privacy controls.",
+        content: "Appearance, text size, your device PIN and privacy controls.",
       },
       { property: "og:title", content: "Settings | CivicDesk" },
-      { property: "og:description", content: "Appearance, calendar sync, PIN lock and privacy." },
+      { property: "og:description", content: "Appearance, PIN lock and privacy." },
     ],
   }),
   component: SettingsPage,
@@ -48,60 +36,15 @@ function SettingsPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { theme, setTheme, textSize, setTextSize } = useTheme();
-  const [sync, setSync] = useState(false);
   const [email, setEmail] = useState("");
   const [changingPin, setChangingPin] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const startConnection = useServerFn(startCalendarConnection);
-  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-    supabase
-      .from("profiles")
-      .select("preferences")
-      .maybeSingle()
-      .then(({ data }) => {
-        const prefs = data?.preferences as { calendar_sync?: boolean } | null;
-        setSync(!!prefs?.calendar_sync);
-      });
-    supabase
-      .from("calendar_connections" as never)
-      .select("grant_id")
-      .maybeSingle()
-      .then(({ data }) => setConnected(!!(data as { grant_id?: string } | null)?.grant_id));
   }, []);
-
-  async function toggleSync(next: boolean) {
-    setSync(next);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ preferences: { calendar_sync: next } })
-      .eq("id", u.user.id);
-    if (error) {
-      setSync(!next);
-      toast.error("Could not save that setting");
-      return;
-    }
-    if (next && !connected) {
-      toast.message("Connect a calendar to let CivicDesk add events.");
-    } else {
-      toast.success(next ? "Calendar sync on" : "Calendar sync off");
-    }
-  }
-
-  async function connectCalendar() {
-    try {
-      const { url } = await startConnection();
-      window.location.assign(url);
-    } catch {
-      toast.error("Could not open calendar authorization");
-    }
-  }
 
   async function removeAccount() {
     setDeleting(true);
@@ -174,38 +117,6 @@ function SettingsPage() {
       </GlassCard>
 
       <GlassCard className="mb-3">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <div className="min-w-0">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <CalendarCheck className="h-4 w-4 shrink-0" /> Calendar sync
-            </h2>
-            <p className="mt-1 text-xs text-foreground/55">
-              Add each new deadline to your calendar automatically.
-            </p>
-          </div>
-          <button
-            role="switch"
-            aria-checked={sync}
-            aria-label="Calendar sync"
-            onClick={() => toggleSync(!sync)}
-            className={`press h-7 w-12 shrink-0 rounded-full border border-border p-0.5 ${
-              sync ? "bg-primary" : "bg-foreground/10"
-            }`}
-          >
-            <span
-              className={`block h-6 w-6 rounded-full bg-white shadow transition-transform ${
-                sync ? "translate-x-5" : ""
-              }`}
-            />
-          </button>
-        </div>
-        <GlassButton variant="glass" className="mt-3 w-full" onClick={connectCalendar}>
-          <CalendarCheck className="h-4 w-4" />
-          {connected ? "Reconnect calendar" : "Connect Outlook or iCloud Calendar"}
-        </GlassButton>
-      </GlassCard>
-
-      <GlassCard className="mb-3">
         <GlassButton
           variant="ghost"
           className="w-full justify-start px-0"
@@ -254,7 +165,7 @@ function SettingsPage() {
       {confirmDelete ? (
         <ConfirmDialog
           title="Delete your account?"
-          message="This permanently removes your profile, vault items, deadlines, calendar connection, and uploaded documents. This cannot be undone."
+          message="This permanently removes your profile, vault items, and uploaded documents. This cannot be undone."
           confirmLabel="Delete account"
           cancelLabel="Keep account"
           destructive

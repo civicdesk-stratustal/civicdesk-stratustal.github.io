@@ -1,8 +1,7 @@
 type CloudflareBindings = Record<string, unknown>;
 
 function getCloudflareBindings(): CloudflareBindings | undefined {
-  return (globalThis as typeof globalThis & { __env__?: CloudflareBindings })
-    .__env__;
+  return (globalThis as typeof globalThis & { __env__?: CloudflareBindings }).__env__;
 }
 
 /**

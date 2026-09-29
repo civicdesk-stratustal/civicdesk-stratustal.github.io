@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
-    root.dataset['textSize'] = textSize;
+    root.dataset["textSize"] = textSize;
     localStorage.setItem(KEY_THEME, theme);
     localStorage.setItem(KEY_TEXT, textSize);
   }, [theme, textSize]);

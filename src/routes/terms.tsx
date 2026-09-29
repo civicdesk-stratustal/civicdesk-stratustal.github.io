@@ -48,8 +48,7 @@ function TermsPage() {
             <p>
               CivicDesk is a personal document management tool. It lets you store copies of
               documents such as receipts, warranties, subscription confirmations, gift cards and
-              identity paperwork, extracts key details from them, records deadlines and, at your
-              request, adds those deadlines to a connected third-party calendar.
+              identity paperwork, extracts key details from them and records important deadlines.
             </p>
           </section>
           <section>

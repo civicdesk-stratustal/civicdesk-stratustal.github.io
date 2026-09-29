@@ -17,8 +17,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "CivicDesk — Never miss a deadline again" },
       {
         property: "og:description",
-        content:
-          "Scan a document, get a deadline, sync it to your calendar. Your personal life-admin assistant.",
+        content: "Scan a document, get the important details and stay ahead of every deadline.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

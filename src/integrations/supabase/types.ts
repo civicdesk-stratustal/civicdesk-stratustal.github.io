@@ -10,7 +10,6 @@ export type Database = {
     Tables: {
       deadlines: {
         Row: {
-          calendar_event_id: string | null;
           created_at: string;
           deadline_date: string;
           id: string;
@@ -21,7 +20,6 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          calendar_event_id?: string | null;
           created_at?: string;
           deadline_date: string;
           id?: string;
@@ -32,7 +30,6 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          calendar_event_id?: string | null;
           created_at?: string;
           deadline_date?: string;
           id?: string;

@@ -27,4 +27,3 @@ export const deleteAccount = createServerFn({ method: "POST" })
 
     return { deleted: true as const };
   });
-
