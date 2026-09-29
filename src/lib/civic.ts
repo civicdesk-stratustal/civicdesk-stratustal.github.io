@@ -22,6 +22,9 @@ export type Item = {
   brand: string | null;
   summary: string | null;
   purchase_date: string | null;
+  price: number | null;
+  currency: string | null;
+  renewal_cycle: string | null;
   created_at: string;
 };
 
@@ -39,7 +42,7 @@ export type Deadline = {
 export async function fetchItems(): Promise<Item[]> {
   const { data, error } = await supabase
     .from("items")
-    .select("id,title,category,brand,summary,purchase_date,created_at")
+    .select("id,title,category,brand,summary,purchase_date,price,currency,renewal_cycle,created_at")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Item[];
@@ -63,7 +66,7 @@ export async function searchItems(term: string): Promise<Item[]> {
   const pattern = `%${q.replace(/[%_]/g, "")}%`;
   const { data, error } = await supabase
     .from("items")
-    .select("id,title,category,brand,summary,purchase_date,created_at")
+    .select("id,title,category,brand,summary,purchase_date,price,currency,renewal_cycle,created_at")
     .or(`title.ilike.${pattern},category.ilike.${pattern},summary.ilike.${pattern}`)
     .order("created_at", { ascending: false })
     .limit(8);
@@ -98,6 +101,22 @@ export function timeRemaining(deadline: Deadline) {
   if (days === 0) return "Due today";
   if (days === 1) return "Due tomorrow";
   return `Due in ${days} days`;
+}
+
+export type RenewalCycle = "weekly" | "monthly" | "yearly";
+
+export function monthlyEquivalent(price: number | null, cycle: string | null) {
+  if (price == null || !Number.isFinite(price) || price < 0) return null;
+  if (cycle === "weekly") return (price * 52) / 12;
+  if (cycle === "yearly") return price / 12;
+  return cycle === "monthly" ? price : null;
+}
+
+export function compatibleMonthlySpending(items: Item[], currency: string) {
+  return items.reduce((total, item) => {
+    if (item.category !== "Subscriptions" || item.currency !== currency) return total;
+    return total + (monthlyEquivalent(item.price, item.renewal_cycle) ?? 0);
+  }, 0);
 }
 
 export function greeting() {

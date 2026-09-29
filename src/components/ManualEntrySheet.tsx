@@ -21,6 +21,9 @@ export function ManualEntrySheet({
     title: "",
     category: "Subscriptions" as Category,
     summary: "",
+    price: "",
+    currency: "INR",
+    renewal_cycle: "monthly" as "weekly" | "monthly" | "yearly",
     deadline: "",
     action: "",
   });
@@ -41,6 +44,12 @@ export function ManualEntrySheet({
           title: draft.title.trim(),
           category: normalizeCategory(draft.category),
           summary: draft.summary.trim() || null,
+          price:
+            draft.category === "Subscriptions" && draft.price !== "" ? Number(draft.price) : null,
+          currency:
+            draft.category === "Subscriptions" && draft.price !== "" ? draft.currency : null,
+          renewal_cycle:
+            draft.category === "Subscriptions" && draft.price !== "" ? draft.renewal_cycle : null,
         })
         .select("id")
         .single();
@@ -105,6 +114,47 @@ export function ManualEntrySheet({
             value={draft.summary}
             onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
           />
+          {draft.category === "Subscriptions" ? (
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <GlassInput
+                label="Price / cost"
+                type="number"
+                min="0"
+                step="0.01"
+                value={draft.price}
+                onChange={(e) => setDraft({ ...draft, price: e.target.value })}
+              />
+              <label className="block text-xs font-medium text-foreground/60">
+                Currency
+                <select
+                  className="mt-1.5 h-11 w-full rounded-2xl border border-border bg-foreground/[0.06] px-3 text-sm text-foreground"
+                  value={draft.currency}
+                  onChange={(e) => setDraft({ ...draft, currency: e.target.value })}
+                >
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                  <option value="JPY">JPY</option>
+                </select>
+              </label>
+              <label className="col-span-2 block text-xs font-medium text-foreground/60">
+                Renewal cycle
+                <select
+                  className="mt-1.5 h-11 w-full rounded-2xl border border-border bg-foreground/[0.06] px-3 text-sm text-foreground"
+                  value={draft.renewal_cycle}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      renewal_cycle: e.target.value as typeof draft.renewal_cycle,
+                    })
+                  }
+                >
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </label>
+            </div>
+          ) : null}
           <GlassInput
             label="Deadline, renewal, or expiry date"
             type="date"

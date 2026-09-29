@@ -94,6 +94,9 @@ export type Database = {
           created_at: string;
           id: string;
           purchase_date: string | null;
+          price: number | null;
+          currency: string | null;
+          renewal_cycle: string | null;
           summary: string | null;
           title: string;
           user_id: string;
@@ -104,6 +107,9 @@ export type Database = {
           created_at?: string;
           id?: string;
           purchase_date?: string | null;
+          price?: number | null;
+          currency?: string | null;
+          renewal_cycle?: string | null;
           summary?: string | null;
           title: string;
           user_id: string;
@@ -114,6 +120,9 @@ export type Database = {
           created_at?: string;
           id?: string;
           purchase_date?: string | null;
+          price?: number | null;
+          currency?: string | null;
+          renewal_cycle?: string | null;
           summary?: string | null;
           title?: string;
           user_id?: string;
