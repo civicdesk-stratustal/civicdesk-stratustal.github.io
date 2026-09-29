@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CheckCircle2, FileText, FileUp } from "lucide-react";
+import { Camera, CheckCircle2, FilePlus2, FileText, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassCard } from "@/components/glass";
 import { SearchBar } from "@/components/SearchBar";
 import { CaptureSheet } from "@/components/CaptureSheet";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { ManualEntrySheet } from "@/components/ManualEntrySheet";
 import {
   fetchDeadlines,
   greeting,
@@ -40,6 +41,7 @@ function HomePage() {
   const [pending, setPending] = useState<File[]>([]);
   const [name, setName] = useState("");
   const [sync, setSync] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ["deadlines"], queryFn: fetchDeadlines });
 
@@ -61,7 +63,10 @@ function HomePage() {
   const upcoming = upcomingWithinWeek(data ?? []);
 
   async function complete(d: Deadline) {
-    const { error } = await supabase.from("deadlines").update({ status: "completed" }).eq("id", d.id);
+    const { error } = await supabase
+      .from("deadlines")
+      .update({ status: "completed" })
+      .eq("id", d.id);
     if (error) {
       toast.error("Could not update this one");
       return;
@@ -86,7 +91,7 @@ function HomePage() {
       </header>
 
       <div className="mb-5">
-        <SearchBar onSelect={() => navigate({ to: "/vault" })} />
+        <SearchBar onSelect={(item) => navigate({ to: "/vault", search: { item: item.id } })} />
       </div>
 
       <input
@@ -107,7 +112,7 @@ function HomePage() {
         onChange={(e) => choose(e.target.files)}
       />
 
-      <div className="mb-7 grid grid-cols-2 gap-3">
+      <div className="mb-7 grid grid-cols-3 gap-3">
         <button
           onClick={() => cameraRef.current?.click()}
           className="press glass flex min-h-36 flex-col items-center justify-center gap-3 rounded-3xl p-4"
@@ -121,6 +126,13 @@ function HomePage() {
         >
           <FileUp className="h-8 w-8 text-primary" />
           <span className="text-sm font-semibold text-foreground">Upload Files</span>
+        </button>
+        <button
+          onClick={() => setManualOpen(true)}
+          className="press glass flex min-h-36 flex-col items-center justify-center gap-3 rounded-3xl p-4"
+        >
+          <FilePlus2 className="h-8 w-8 text-primary" />
+          <span className="text-center text-sm font-semibold text-foreground">Add Manually</span>
         </button>
       </div>
 
@@ -146,6 +158,16 @@ function HomePage() {
             if (cameraRef.current) cameraRef.current.value = "";
             if (uploadRef.current) uploadRef.current.value = "";
           }}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["deadlines"] });
+            qc.invalidateQueries({ queryKey: ["items"] });
+          }}
+        />
+      ) : null}
+      {manualOpen ? (
+        <ManualEntrySheet
+          calendarSync={sync}
+          onClose={() => setManualOpen(false)}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["deadlines"] });
             qc.invalidateQueries({ queryKey: ["items"] });

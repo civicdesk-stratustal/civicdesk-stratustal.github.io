@@ -1,17 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getServerEnv } from "./server-env";
+import { openRouterChat } from "./openrouter";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const CATEGORY_LIST = [
-  "Documents",
-  "Warranties",
-  "Subscriptions",
-  "Gift Cards",
-  "Return Windows",
-];
-
-const MODEL = "google/gemma-4-26b-a4b-it";
+const CATEGORY_LIST = ["Documents", "Warranties", "Subscriptions", "Gift Cards", "Return Windows"];
 
 const InputSchema = z.object({
   files: z
@@ -58,7 +50,10 @@ Rules:
 `;
 
 function extractJson(text: string): DocumentAnalysis | null {
-  const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const cleaned = text
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
@@ -68,9 +63,7 @@ function extractJson(text: string): DocumentAnalysis | null {
   }
 
   try {
-    const parsed = JSON.parse(
-      cleaned.slice(start, end + 1),
-    ) as Partial<DocumentAnalysis>;
+    const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Partial<DocumentAnalysis>;
 
     return {
       category: CATEGORY_LIST.includes(String(parsed.category))
@@ -82,14 +75,11 @@ function extractJson(text: string): DocumentAnalysis | null {
       summary: String(parsed.summary ?? "").slice(0, 600),
 
       deadline_date:
-        typeof parsed.deadline_date === "string" &&
-        /^\d{4}-\d{2}-\d{2}$/.test(parsed.deadline_date)
+        typeof parsed.deadline_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.deadline_date)
           ? parsed.deadline_date
           : null,
 
-      recommended_action: String(
-        parsed.recommended_action ?? "",
-      ).slice(0, 300),
+      recommended_action: String(parsed.recommended_action ?? "").slice(0, 300),
     };
   } catch {
     return null;
@@ -164,86 +154,25 @@ export const analyzeDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<DocumentAnalysis> => {
-    const apiKey = getServerEnv("OPENROUTER_API_KEY");
-
-    if (!apiKey) {
-      throw new Error("Document reading is not configured yet.");
-    }
-
     const today = new Date().toISOString().slice(0, 10);
 
     const content = createDocumentContent(data.files, today);
 
-    const res = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer":
-            getServerEnv("APP_URL") ??
-            "https://civicdesk.stratustal.workers.dev",
-          "X-Title": "CivicDesk",
+    const res = await openRouterChat({
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM,
         },
-        body: JSON.stringify({
-          model: MODEL,
-
-          messages: [
-            {
-              role: "system",
-              content: SYSTEM,
-            },
-            {
-              role: "user",
-              content,
-            },
-          ],
-
-          temperature: 0.1,
-          max_tokens: 800,
-
-          response_format: {
-            type: "json_object",
-          },
-
-          // Prefer providers that do not collect prompts for training.
-          // OpenRouter applies this at the provider-routing layer.
-          provider: {
-            data_collection: "deny",
-          },
-        }),
-      },
-    );
-
-    if (res.status === 401) {
-      throw new Error("The document AI service is not configured correctly.");
-    }
-
-    if (res.status === 402) {
-      throw new Error(
-        "The document AI service has insufficient credits.",
-      );
-    }
-
-    if (res.status === 429) {
-      throw new Error(
-        "Too many documents at once. Try again in a moment.",
-      );
-    }
-
-    if (!res.ok) {
-      const body = await res.text();
-
-      console.error("OpenRouter error", {
-        status: res.status,
-        body,
-      });
-
-      throw new Error(
-        "The document could not be read automatically.",
-      );
-    }
+        {
+          role: "user",
+          content,
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 800,
+      response_format: { type: "json_object" },
+    });
 
     const json = (await res.json()) as {
       choices?: Array<{
@@ -262,9 +191,7 @@ export const analyzeDocument = createServerFn({ method: "POST" })
         text,
       });
 
-      throw new Error(
-        "The document could not be read automatically.",
-      );
+      throw new Error("The document could not be read automatically.");
     }
 
     return parsed;

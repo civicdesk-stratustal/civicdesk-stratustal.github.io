@@ -1,14 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import {
-  ChevronLeft,
-  CreditCard,
-  FileText,
-  RotateCcw,
-  ShieldCheck,
-  RefreshCw,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { ChevronLeft, CreditCard, FileText, RotateCcw, ShieldCheck, RefreshCw } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/glass";
 import { SearchBar } from "@/components/SearchBar";
 import { DocumentViewer } from "@/components/DocumentViewer";
@@ -22,6 +16,7 @@ import {
 } from "@/lib/civic";
 
 export const Route = createFileRoute("/_authenticated/vault")({
+  validateSearch: z.object({ item: z.string().uuid().optional() }),
   head: () => ({
     meta: [
       { title: "Vault | CivicDesk" },
@@ -46,12 +41,17 @@ const ICONS: Record<Category, typeof FileText> = {
 };
 
 function VaultPage() {
+  const { item: selectedItem } = Route.useSearch();
   const [open, setOpen] = useState<Category | null>(null);
   const [viewingItem, setViewingItem] = useState<string | null>(null);
   const { data: items, isLoading } = useQuery({ queryKey: ["items"], queryFn: fetchItems });
   const { data: deadlines } = useQuery({ queryKey: ["deadlines"], queryFn: fetchDeadlines });
 
   const all = items ?? [];
+  useEffect(() => {
+    const item = all.find((candidate) => candidate.id === selectedItem);
+    if (item) setOpen(normalizeCategory(item.category));
+  }, [all, selectedItem]);
   const byItem = new Map((deadlines ?? []).map((d) => [d.item_id, d]));
 
   if (open) {
@@ -88,7 +88,9 @@ function VaultPage() {
                     ) : null}
                   </div>
                   {item.summary ? (
-                    <p className="mt-2 text-xs leading-relaxed text-foreground/60">{item.summary}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-foreground/60">
+                      {item.summary}
+                    </p>
                   ) : null}
                   <GlassButton
                     variant="glass"

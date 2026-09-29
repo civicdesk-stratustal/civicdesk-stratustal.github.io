@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassInput } from "@/components/glass";
 import { CATEGORIES, normalizeCategory, type Category } from "@/lib/civic";
 import { analyzeDocument, type DocumentAnalysis } from "@/lib/ai.functions";
-import { createCalendarEvent } from "@/utils/googleCalendar";
+import { createConnectedCalendarEvent } from "@/lib/calendar.functions";
 
 type Draft = {
   title: string;
@@ -37,6 +37,7 @@ export function CaptureSheet({
   calendarSync: boolean;
 }) {
   const analyze = useServerFn(analyzeDocument);
+  const createCalendarEvent = useServerFn(createConnectedCalendarEvent);
   const [reading, setReading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -121,17 +122,17 @@ export function CaptureSheet({
         let eventId: string | null = null;
         if (calendarSync) {
           const result = await createCalendarEvent({
-            title: draft.title,
-            date: draft.deadline_date,
-            description: draft.recommended_action,
+            data: {
+              title: draft.title,
+              date: draft.deadline_date,
+              description: draft.recommended_action,
+            },
           });
           eventId = result.eventId;
-          if (result.status === "unauthorized") {
-            toast.error(
-              "Google Calendar access expired. Calendar sync is off — re-authorize it in Settings.",
-            );
-          } else if (result.status === "no-token") {
-            toast.message("Saved. Authorize Google Calendar in Settings to sync deadlines.");
+          if (result.status === "not-connected") {
+            toast.message("Saved. Connect your calendar in Settings to sync future deadlines.");
+          } else if (result.status === "not-configured") {
+            toast.message("Saved. Calendar sync is not configured yet.");
           } else if (result.status === "failed") {
             toast.message("Saved, but the calendar event could not be created.");
           }
@@ -143,7 +144,7 @@ export function CaptureSheet({
           deadline_date: new Date(`${draft.deadline_date}T12:00:00`).toISOString(),
           recommended_action: draft.recommended_action || null,
           status: "pending",
-          google_event_id: eventId,
+          calendar_event_id: eventId,
         });
         if (dlErr) throw dlErr;
       }

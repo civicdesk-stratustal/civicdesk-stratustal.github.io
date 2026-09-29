@@ -38,9 +38,9 @@ function TermsPage() {
           <section>
             <h2 className="mb-1 font-semibold text-foreground">1. Agreement</h2>
             <p>
-              These Terms of Service form an agreement between you and Stratustal ("we", "us"),
-              the provider of CivicDesk. By creating an account or using the app you accept these
-              terms. If you do not accept them, please do not use CivicDesk.
+              These Terms of Service form an agreement between you and Stratustal ("we", "us"), the
+              provider of CivicDesk. By creating an account or using the app you accept these terms.
+              If you do not accept them, please do not use CivicDesk.
             </p>
           </section>
           <section>
@@ -49,7 +49,7 @@ function TermsPage() {
               CivicDesk is a personal document management tool. It lets you store copies of
               documents such as receipts, warranties, subscription confirmations, gift cards and
               identity paperwork, extracts key details from them, records deadlines and, at your
-              request, adds those deadlines to your Google Calendar.
+              request, adds those deadlines to a connected third-party calendar.
             </p>
           </section>
           <section>
@@ -80,7 +80,9 @@ function TermsPage() {
             </p>
           </section>
           <section>
-            <h2 className="mb-1 font-semibold text-foreground">6. Automated reading and reminders</h2>
+            <h2 className="mb-1 font-semibold text-foreground">
+              6. Automated reading and reminders
+            </h2>
             <p>
               Details and dates extracted from your documents are produced automatically and may be
               incomplete or incorrect. You can edit every field before saving. CivicDesk is an
@@ -99,9 +101,9 @@ function TermsPage() {
           <section>
             <h2 className="mb-1 font-semibold text-foreground">8. Liability</h2>
             <p>
-              To the fullest extent permitted by law, we are not liable for indirect or consequential
-              loss, or for any missed deadline, lapsed warranty, expired return window or other
-              outcome arising from your use of, or inability to use, CivicDesk.
+              To the fullest extent permitted by law, we are not liable for indirect or
+              consequential loss, or for any missed deadline, lapsed warranty, expired return window
+              or other outcome arising from your use of, or inability to use, CivicDesk.
             </p>
           </section>
           <section>
@@ -115,8 +117,8 @@ function TermsPage() {
           <section>
             <h2 className="mb-1 font-semibold text-foreground">10. Contact</h2>
             <p>
-              Questions about these terms can be sent to us through the support channel listed on our
-              website. Read our{" "}
+              Questions about these terms can be sent to us through the support channel listed on
+              our website. Read our{" "}
               <Link to="/privacy" className="font-medium text-primary">
                 Privacy Policy
               </Link>{" "}

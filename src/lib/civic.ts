@@ -32,7 +32,7 @@ export type Deadline = {
   deadline_date: string;
   recommended_action: string | null;
   status: string;
-  google_event_id: string | null;
+  calendar_event_id: string | null;
   category?: string;
 };
 
@@ -49,7 +49,7 @@ export async function fetchDeadlines(): Promise<Deadline[]> {
   const { data, error } = await supabase
     .from("deadlines")
     .select(
-      "id,item_id,title,deadline_date,recommended_action,status,google_event_id,items(category)",
+      "id,item_id,title,deadline_date,recommended_action,status,calendar_event_id,items(category)",
     )
     .order("deadline_date", { ascending: true });
   if (error) throw error;

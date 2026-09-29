@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -36,6 +37,11 @@ const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -90,16 +99,31 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/privacy' | '/terms' | '/calendar' | '/home' | '/settings' | '/vault'
+    | '/'
+    | '/privacy'
+    | '/terms'
+    | '/assistant'
+    | '/calendar'
+    | '/home'
+    | '/settings'
+    | '/vault'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/privacy' | '/terms' | '/calendar' | '/home' | '/settings' | '/vault'
+    | '/'
+    | '/privacy'
+    | '/terms'
+    | '/assistant'
+    | '/calendar'
+    | '/home'
+    | '/settings'
+    | '/vault'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/privacy'
     | '/terms'
+    | '/_authenticated/assistant'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/settings'
@@ -143,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/calendar': {
       id: '/_authenticated/calendar'
       path: '/calendar'
@@ -175,6 +206,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -182,6 +214,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

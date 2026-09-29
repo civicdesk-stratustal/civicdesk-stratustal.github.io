@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   CalendarCheck,
@@ -16,11 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassCard } from "@/components/glass";
 import { PinLockModal } from "@/components/PinLockModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import {
-  authorizeGoogleCalendar,
-  clearProviderToken,
-  getProviderToken,
-} from "@/utils/googleCalendar";
+import { startCalendarConnection } from "@/lib/calendar.functions";
 import { useTheme, type TextSize } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -52,10 +49,10 @@ function SettingsPage() {
   const [email, setEmail] = useState("");
   const [changingPin, setChangingPin] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const [hasToken, setHasToken] = useState(false);
+  const startConnection = useServerFn(startCalendarConnection);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    setHasToken(!!getProviderToken());
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
     supabase
       .from("profiles")
@@ -65,6 +62,11 @@ function SettingsPage() {
         const prefs = data?.preferences as { calendar_sync?: boolean } | null;
         setSync(!!prefs?.calendar_sync);
       });
+    supabase
+      .from("calendar_connections" as never)
+      .select("grant_id")
+      .maybeSingle()
+      .then(({ data }) => setConnected(!!(data as { grant_id?: string } | null)?.grant_id));
   }, []);
 
   async function toggleSync(next: boolean) {
@@ -80,25 +82,25 @@ function SettingsPage() {
       toast.error("Could not save that setting");
       return;
     }
-    if (next && !getProviderToken()) {
-      toast.message("Sign in with Google to let CivicDesk add events to your calendar.");
+    if (next && !connected) {
+      toast.message("Connect a calendar to let CivicDesk add events.");
     } else {
       toast.success(next ? "Calendar sync on" : "Calendar sync off");
     }
   }
 
-  async function reauthorize() {
+  async function connectCalendar() {
     try {
-      await authorizeGoogleCalendar();
+      const { url } = await startConnection();
+      window.location.assign(url);
     } catch {
-      toast.error("Could not open Google authorization");
+      toast.error("Could not open calendar authorization");
     }
   }
 
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
-    clearProviderToken();
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   }
@@ -154,7 +156,7 @@ function SettingsPage() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <CalendarCheck className="h-4 w-4 shrink-0" /> Google Calendar sync
+              <CalendarCheck className="h-4 w-4 shrink-0" /> Calendar sync
             </h2>
             <p className="mt-1 text-xs text-foreground/55">
               Add each new deadline to your calendar automatically.
@@ -163,7 +165,7 @@ function SettingsPage() {
           <button
             role="switch"
             aria-checked={sync}
-            aria-label="Google Calendar sync"
+            aria-label="Calendar sync"
             onClick={() => toggleSync(!sync)}
             className={`press h-7 w-12 shrink-0 rounded-full border border-border p-0.5 ${
               sync ? "bg-primary" : "bg-foreground/10"
@@ -176,9 +178,9 @@ function SettingsPage() {
             />
           </button>
         </div>
-        <GlassButton variant="glass" className="mt-3 w-full" onClick={reauthorize}>
+        <GlassButton variant="glass" className="mt-3 w-full" onClick={connectCalendar}>
           <CalendarCheck className="h-4 w-4" />
-          {hasToken ? "Re-authorize Google Calendar" : "Authorize Google Calendar"}
+          {connected ? "Reconnect calendar" : "Connect Outlook or iCloud Calendar"}
         </GlassButton>
       </GlassCard>
 

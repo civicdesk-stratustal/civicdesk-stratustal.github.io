@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "How CivicDesk stores your documents, isolates your data with row-level security and uses Google Calendar access only to sync deadlines you request.",
+          "How CivicDesk stores your documents, isolates your data with row-level security and uses calendar access only to sync deadlines you request.",
       },
       { property: "og:title", content: "Privacy Policy | CivicDesk" },
       {
@@ -51,7 +51,7 @@ function PrivacyPage() {
               Account details (your email address and, where you provide it, your name); the
               documents and images you upload; the details extracted from them such as titles,
               summaries, categories and deadline dates; your app preferences; and, where you enable
-              it, the Google account authorisation used for calendar syncing.
+              it, the calendar connection authorisation used for calendar syncing.
             </p>
           </section>
           <section>
@@ -80,12 +80,11 @@ function PrivacyPage() {
             </p>
           </section>
           <section>
-            <h2 className="mb-1 font-semibold text-foreground">Google Calendar</h2>
+            <h2 className="mb-1 font-semibold text-foreground">Calendar connection</h2>
             <p>
-              If you turn on calendar sync, we use Google OAuth strictly to create the calendar
-              events for deadlines you have asked us to sync. We do not read your existing calendar
-              contents, we do not share this access with anyone, and you can turn sync off at any
-              time in Settings or revoke access from your Google account.
+              If you turn on calendar sync, our calendar provider uses OAuth strictly to create the
+              deadline events you have asked us to sync. We do not share this access with anyone;
+              you can turn sync off in Settings and revoke access with your calendar provider.
             </p>
           </section>
           <section>
@@ -100,16 +99,16 @@ function PrivacyPage() {
             <h2 className="mb-1 font-semibold text-foreground">Retention and your rights</h2>
             <p>
               We keep your data for as long as your account is active. You can edit or delete items
-              at any time, and you can request deletion of your account and all associated documents,
-              after which they are removed from live systems. You may also request a copy of the data
-              held about you.
+              at any time, and you can request deletion of your account and all associated
+              documents, after which they are removed from live systems. You may also request a copy
+              of the data held about you.
             </p>
           </section>
           <section>
             <h2 className="mb-1 font-semibold text-foreground">Changes and contact</h2>
             <p>
-              If this policy changes materially we will notify you in the app. For privacy questions,
-              contact us through the support channel listed on our website. See also our{" "}
+              If this policy changes materially we will notify you in the app. For privacy
+              questions, contact us through the support channel listed on our website. See also our{" "}
               <Link to="/terms" className="font-medium text-primary">
                 Terms of Service
               </Link>

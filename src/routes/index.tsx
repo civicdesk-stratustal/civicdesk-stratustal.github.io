@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassInput, Shell } from "@/components/glass";
-import { storeProviderToken } from "@/utils/googleCalendar";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,7 +36,6 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        storeProviderToken(data.session.provider_token);
         navigate({ to: "/home", replace: true });
       }
     });
@@ -96,19 +94,13 @@ function AuthPage() {
       });
 
       if (retry.error) {
-        toast.success(
-          "Check your inbox to confirm your email, then sign in.",
-        );
+        toast.success("Check your inbox to confirm your email, then sign in.");
         return;
       }
 
       navigate({ to: "/home", replace: true });
     } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong",
-      );
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -158,9 +150,7 @@ function AuthPage() {
             <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            CivicDesk
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">CivicDesk</h1>
 
           <p className="mt-2 text-sm text-foreground/60">
             Your life admin, captured, scheduled and handled.
@@ -188,11 +178,7 @@ function AuthPage() {
               autoComplete="current-password"
             />
 
-            <GlassButton
-              type="submit"
-              loading={loading}
-              className="w-full"
-            >
+            <GlassButton type="submit" loading={loading} className="w-full">
               Continue
             </GlassButton>
 
@@ -230,25 +216,17 @@ function AuthPage() {
 
         <p className="mt-6 text-center text-xs text-foreground/50">
           By continuing you agree to our{" "}
-          <Link
-            to="/terms"
-            className="font-medium text-primary"
-          >
+          <Link to="/terms" className="font-medium text-primary">
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link
-            to="/privacy"
-            className="font-medium text-primary"
-          >
+          <Link to="/privacy" className="font-medium text-primary">
             Privacy Policy
           </Link>
           .
         </p>
 
-        <p className="mt-3 text-center text-xs text-foreground/35">
-          CivicDesk by Stratustal
-        </p>
+        <p className="mt-3 text-center text-xs text-foreground/35">CivicDesk by Stratustal</p>
       </main>
     </Shell>
   );
