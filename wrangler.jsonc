@@ -27,9 +27,7 @@
       "type": "ESModule",
       "globs": ["**/*.mjs", "**/*.js"]
     }
-  ]
-}
-
+  ],
   "observability": {
     "enabled": true
   }
