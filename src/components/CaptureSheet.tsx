@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassButton, GlassInput } from "@/components/glass";
 import { CATEGORIES, normalizeCategory, type Category } from "@/lib/civic";
 import { analyzeDocument, type DocumentAnalysis } from "@/lib/ai.functions";
-import { createConnectedCalendarEvent } from "@/lib/calendar.functions";
 
 type Draft = {
   title: string;
@@ -29,15 +28,12 @@ export function CaptureSheet({
   files,
   onClose,
   onSaved,
-  calendarSync,
 }: {
   files: File[];
   onClose: () => void;
   onSaved: () => void;
-  calendarSync: boolean;
 }) {
   const analyze = useServerFn(analyzeDocument);
-  const createCalendarEvent = useServerFn(createConnectedCalendarEvent);
   const [reading, setReading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -119,24 +115,6 @@ export function CaptureSheet({
       }
 
       if (draft.deadline_date) {
-        let eventId: string | null = null;
-        if (calendarSync) {
-          const result = await createCalendarEvent({
-            data: {
-              title: draft.title,
-              date: draft.deadline_date,
-              description: draft.recommended_action,
-            },
-          });
-          eventId = result.eventId;
-          if (result.status === "not-connected") {
-            toast.message("Saved. Connect your calendar in Settings to sync future deadlines.");
-          } else if (result.status === "not-configured") {
-            toast.message("Saved. Calendar sync is not configured yet.");
-          } else if (result.status === "failed") {
-            toast.message("Saved, but the calendar event could not be created.");
-          }
-        }
         const { error: dlErr } = await supabase.from("deadlines").insert({
           user_id: uid,
           item_id: item.id,
@@ -144,7 +122,6 @@ export function CaptureSheet({
           deadline_date: new Date(`${draft.deadline_date}T12:00:00`).toISOString(),
           recommended_action: draft.recommended_action || null,
           status: "pending",
-          calendar_event_id: eventId,
         });
         if (dlErr) throw dlErr;
       }

@@ -40,7 +40,6 @@ function HomePage() {
   const uploadRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<File[]>([]);
   const [name, setName] = useState("");
-  const [sync, setSync] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ["deadlines"], queryFn: fetchDeadlines });
@@ -50,14 +49,6 @@ function HomePage() {
       const meta = u.user?.user_metadata as { full_name?: string } | undefined;
       setName(meta?.full_name?.split(" ")[0] ?? u.user?.email?.split("@")[0] ?? "");
     });
-    supabase
-      .from("profiles")
-      .select("preferences")
-      .maybeSingle()
-      .then(({ data: p }) => {
-        const prefs = p?.preferences as { calendar_sync?: boolean } | null;
-        setSync(!!prefs?.calendar_sync);
-      });
   }, []);
 
   const upcoming = upcomingWithinWeek(data ?? []);
@@ -152,7 +143,6 @@ function HomePage() {
       {pending.length ? (
         <CaptureSheet
           files={pending}
-          calendarSync={sync}
           onClose={() => {
             setPending([]);
             if (cameraRef.current) cameraRef.current.value = "";
@@ -166,7 +156,6 @@ function HomePage() {
       ) : null}
       {manualOpen ? (
         <ManualEntrySheet
-          calendarSync={sync}
           onClose={() => setManualOpen(false)}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["deadlines"] });

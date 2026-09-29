@@ -1,22 +1,17 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, normalizeCategory, type Category } from "@/lib/civic";
-import { createConnectedCalendarEvent } from "@/lib/calendar.functions";
 import { GlassButton, GlassInput } from "./glass";
 
 export function ManualEntrySheet({
-  calendarSync,
   onClose,
   onSaved,
 }: {
-  calendarSync: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const createCalendarEvent = useServerFn(createConnectedCalendarEvent);
   const [draft, setDraft] = useState({
     title: "",
     category: "Subscriptions" as Category,
@@ -55,11 +50,6 @@ export function ManualEntrySheet({
         .single();
       if (error) throw error;
       if (draft.deadline) {
-        const event = calendarSync
-          ? await createCalendarEvent({
-              data: { title: draft.title, date: draft.deadline, description: draft.action },
-            })
-          : null;
         const { error: deadlineError } = await supabase.from("deadlines").insert({
           user_id: auth.user.id,
           item_id: item.id,
@@ -67,7 +57,6 @@ export function ManualEntrySheet({
           deadline_date: new Date(`${draft.deadline}T12:00:00`).toISOString(),
           recommended_action: draft.action || null,
           status: "pending",
-          calendar_event_id: event?.eventId ?? null,
         });
         if (deadlineError) throw deadlineError;
       }

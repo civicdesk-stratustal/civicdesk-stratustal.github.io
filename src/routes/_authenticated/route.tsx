@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useLocation } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Bot, CalendarDays, Home, Lock, Settings as SettingsIcon } from "lucide-react";
+import { Bot, Home, Lock, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Shell } from "@/components/glass";
 import { PinLockModal } from "@/components/PinLockModal";
@@ -47,7 +47,6 @@ function AppLayout() {
 const TABS = [
   { to: "/home", label: "Home", Icon: Home },
   { to: "/vault", label: "Vault", Icon: Lock },
-  { to: "/calendar", label: "Calendar", Icon: CalendarDays },
   { to: "/assistant", label: "Assistant", Icon: Bot },
   { to: "/settings", label: "Settings", Icon: SettingsIcon },
 ] as const;
